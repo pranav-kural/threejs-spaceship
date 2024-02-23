@@ -26,6 +26,6 @@ Vite may serve on a different port, so check the console output for the correct 
 
 ## Dependencies
 
-Only two primary dependencies are used: `three` and `gl-matrix`. These are installed via npm.
+Only two primary dependencies are used: `three` and `dat.gui`. These are installed via npm.
 
 `vite` is used for development, and is also installed via npm.
