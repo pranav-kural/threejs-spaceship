@@ -12,7 +12,8 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x9bbcc5);
 
 const cameraConfig = {
-  fov: 130,
+  fov: 140,
+  topFov: 110,
   aspect: (window.innerWidth * 0.5) / window.innerHeight,
   near: 0.1,
   far: 1000,
@@ -30,7 +31,7 @@ frontCamera.lookAt(scene.position);
 
 // top camera
 const topCamera = new THREE.PerspectiveCamera(
-  cameraConfig.fov,
+  cameraConfig.topFov,
   cameraConfig.aspect,
   cameraConfig.near,
   cameraConfig.far
@@ -93,6 +94,20 @@ async function loadObject(scene) {
   );
 }
 
+// Harmonograph parameters
+const Ax = 1;
+const Ay = 1;
+const Az = 1;
+const As = 1;
+const wx = 1;
+const wy = 2;
+const ws = 3;
+const wz = 2;
+const px = Math.PI / 2;
+const py = Math.PI / 4;
+const pz = Math.PI / 2;
+const ps = Math.PI / 6;
+
 // Animation loop
 function animate() {
   requestAnimationFrame(animate);
@@ -100,9 +115,11 @@ function animate() {
   // Animate the sphere's position
   if (gltf) {
     const time = Date.now() * 0.001;
-    const sphereX = Math.sin(time) * 2; // Animate along the x-axis
-    const sphereY = Math.cos(time) * 2; // Animate along the y-axis
-    gltf.scene.position.set(sphereX, sphereY, 0);
+    // Harmonograph equations
+    const x = Ax * Math.sin(wx * time + px) + As * Math.sin(ws * time + ps);
+    const y = Ay * Math.sin(wy * time + py);
+    const z = Az * Math.sin(wz * time + pz);
+    gltf.scene.position.set(x, y, z);
   }
 
   // Set clear color for the renderer
