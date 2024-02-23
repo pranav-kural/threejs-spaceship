@@ -1,0 +1,20 @@
+{
+  "name": "assign2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx vite",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^5.1.4"
+  },
+  "dependencies": {
+    "gl-matrix": "^3.4.3",
+    "three": "^0.161.0"
+  }
+}
