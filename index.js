@@ -11,12 +11,33 @@ dlog.log("Index.js loaded");
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x9bbcc5);
 
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
+const cameraConfig = {
+  fov: 130,
+  aspect: (window.innerWidth * 0.5) / window.innerHeight,
+  near: 0.1,
+  far: 1000,
+};
+
+// front camera
+const frontCamera = new THREE.PerspectiveCamera(
+  cameraConfig.fov,
+  cameraConfig.aspect,
+  cameraConfig.near,
+  cameraConfig.far
 );
+frontCamera.position.z = 5;
+frontCamera.lookAt(scene.position);
+
+// top camera
+const topCamera = new THREE.PerspectiveCamera(
+  cameraConfig.fov,
+  cameraConfig.aspect,
+  cameraConfig.near,
+  cameraConfig.far
+);
+topCamera.position.y = 5;
+topCamera.rotation.x = -Math.PI / 2; // Rotate the camera to look down
+topCamera.lookAt(scene.position);
 
 // Setup renderer
 const renderer = new THREE.WebGLRenderer();
@@ -24,14 +45,18 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // Load object
+let gltf;
 loadObject(scene);
 
-camera.position.set(0, 0, 5);
-
 // function to load object
-function loadObject(scene) {
+async function loadObject(scene) {
   // Success handler to add object to scene
-  const loadingSuccessHandler = (gltf) => {
+  const loadingSuccessHandler = (obj) => {
+    dlog.log("Object loaded successfully");
+    // store object
+    gltf = obj;
+    dlog.log(gltf);
+    // add object to scene
     scene.add(gltf.scene);
 
     // change color
@@ -60,7 +85,7 @@ function loadObject(scene) {
 
   // Load object
   const loader = new GLTFLoader();
-  loader.load(
+  await loader.load(
     AppConfig.filePathObjectToLoad,
     loadingSuccessHandler,
     progressHandler,
@@ -72,10 +97,38 @@ function loadObject(scene) {
 function animate() {
   requestAnimationFrame(animate);
 
-  // sphere.rotation.x += 0.01;
-  // sphere.rotation.y += 0.01;
+  // Animate the sphere's position
+  if (gltf) {
+    const time = Date.now() * 0.001;
+    const sphereX = Math.sin(time) * 2; // Animate along the x-axis
+    const sphereY = Math.cos(time) * 2; // Animate along the y-axis
+    gltf.scene.position.set(sphereX, sphereY, 0);
+  }
 
-  renderer.render(scene, camera);
+  // Set clear color for the renderer
+  renderer.setClearColor(0x9bbcc5, 1); // Set the background color
+
+  // Render the front view
+  renderer.setViewport(0, 0, window.innerWidth / 2, window.innerHeight);
+  renderer.setScissor(0, 0, window.innerWidth / 2, window.innerHeight);
+  renderer.setScissorTest(true);
+  renderer.render(scene, frontCamera);
+
+  // Render the top view
+  renderer.setViewport(
+    window.innerWidth / 2,
+    0,
+    window.innerWidth / 2,
+    window.innerHeight
+  );
+  renderer.setScissor(
+    window.innerWidth / 2,
+    0,
+    window.innerWidth / 2,
+    window.innerHeight
+  );
+  renderer.setScissorTest(true);
+  renderer.render(scene, topCamera);
 }
 
 if (WebGL.isWebGLAvailable()) {
