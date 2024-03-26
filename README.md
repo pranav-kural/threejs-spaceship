@@ -1,15 +1,10 @@
-# CSI 4130 - Assignment 2
+# Threejs Spaceship
 
-Curves, Animation and Viewing
-
-Student name: Pranav Kural
-Student number: 300241227
+A simple Three.js app that renders a spaceship in a 3D environment.
 
 ## Files
 
-Primary code is in `harmonograph.js`. The `harmonograph.html` file is the entry point for the application.
-
-There is also a `index.html` file which is a copy of `harmonograph.html` for easier loading with vite.
+Primary code is in `harmonograph.js`. The `index.html` file is the entry point for the application when loading through a web browser.
 
 ## Instructions
 
@@ -20,9 +15,7 @@ npm install
 npm start
 ```
 
-To view `harmonograph.html`, open a browser and navigate to `http://localhost:5173/harmonograph.html`.
-
-Vite may serve on a different port, so check the console output for the correct port.
+Open a browser and navigate to `http://localhost:5173/`, or the address shown in console output.
 
 ## Dependencies
 
