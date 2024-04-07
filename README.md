@@ -4,7 +4,7 @@ A simple Three.js app that renders a spaceship in a 3D environment.
 
 ## Files
 
-Primary code is in `harmonograph.js`. The `index.html` file is the entry point for the application when loading through a web browser.
+Primary code is in `index.js`. The `index.html` file is the entry point for the application when loading through a web browser.
 
 ## Instructions
 
