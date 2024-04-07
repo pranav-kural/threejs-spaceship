@@ -1,6 +1,6 @@
 import { dlog } from "./util/dlog.js";
 import { AppConfig } from "./config.js";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { loadObject } from "./util/loader.js";
 import * as THREE from "three";
 import * as dat from "dat.gui";
 import WebGL from "three/addons/capabilities/WebGL.js";
@@ -13,7 +13,7 @@ scene.background = new THREE.Color(0x9bbcc5);
 
 // configurations for the cameras
 const cameraConfig = {
-  fov: 100,
+  fov: 130,
   topFov: 110,
   aspect: window.innerWidth / window.innerHeight,
   near: 0.1,
@@ -50,53 +50,50 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth * 0.9, window.innerHeight * 0.9);
 document.body.appendChild(renderer.domElement);
 
-// Load object
-let gltf;
-loadObject(scene);
+// Load spaceship object
+let spaceship;
+let spaceshipPos = {
+  x: 0,
+  y: 0,
+  z: 1,
+};
+let spaceshipRot = {
+  x: 0,
+  y: 0,
+  z: 0,
+};
+const setSpaceship = (obj) => (spaceship = obj);
+loadObject(
+  scene,
+  AppConfig.spaceshipObjFile,
+  setSpaceship,
+  [spaceshipPos.x, spaceshipPos.y, spaceshipPos.z],
+  [spaceshipRot.x, spaceshipRot.y, spaceshipRot.z]
+);
+let snowMountain;
+const setSnowMountain = (obj) => (snowMountain = obj);
+let snowMountainPos = {
+  x: 20,
+  y: -24,
+  z: -24,
+};
+let snowMountainRot = {
+  x: 0.1,
+  y: 0.8,
+  z: 0,
+};
+loadObject(
+  scene,
+  AppConfig.snowMountainObjFile,
+  setSnowMountain,
+  [snowMountainPos.x, snowMountainPos.y, snowMountainPos.z],
+  [snowMountainRot.x, snowMountainRot.y, snowMountainRot.z]
+);
 
-// function to load object
-async function loadObject(scene) {
-  // Success handler to add object to scene
-  const loadingSuccessHandler = (obj) => {
-    dlog.log("Object loaded successfully");
-    // store object
-    gltf = obj;
-    dlog.log(gltf);
-    // add object to scene
-    scene.add(gltf.scene);
-
-    // change color
-    gltf.scene.traverse((node) => {
-      if (node.isMesh) {
-        node.material.color.set("white");
-      }
-    });
-
-    // set position
-    gltf.scene.position.set(0, 0, 0);
-    // set rotation
-    gltf.scene.rotation.set(0.1, 0, 0);
-
-    // add directional light on the object
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 10);
-    directionalLight.position.set(0, 1, 0);
-    scene.add(directionalLight);
-  };
-
-  // Progress handler to log loading progress
-  const progressHandler = (xhr) => {
-    dlog.log((xhr.loaded / xhr.total) * 100 + "% loaded");
-  };
-
-  // Load object
-  const loader = new GLTFLoader();
-  await loader.load(
-    AppConfig.filePathObjectToLoad,
-    loadingSuccessHandler,
-    progressHandler,
-    errorHandler
-  );
-}
+// add directional light on the object
+const directionalLight = new THREE.DirectionalLight(0xffffff, 10);
+directionalLight.position.set(0, 1, 0);
+scene.add(directionalLight);
 
 // Controls for spaceship object
 let objRotation = {
@@ -124,6 +121,42 @@ rotationFolder
   .listen();
 rotationFolder.add(objRotation, "speed", 0, 0.1).name("Speed").listen();
 rotationFolder.open();
+
+const spaceshipFolder = gui.addFolder("Spaceship Position");
+spaceshipFolder.add(spaceshipPos, "x", -50, 50).name("X Position").listen();
+spaceshipFolder.add(spaceshipPos, "y", -50, 50).name("Y Position").listen();
+spaceshipFolder.add(spaceshipPos, "z", -50, 50).name("Z Position").listen();
+spaceshipFolder.open();
+
+const snowMountainFolder = gui.addFolder("Snow Mountain Position");
+snowMountainFolder
+  .add(snowMountainPos, "x", -50, 50)
+  .name("X Position")
+  .listen();
+snowMountainFolder
+  .add(snowMountainPos, "y", -50, 50)
+  .name("Y Position")
+  .listen();
+snowMountainFolder
+  .add(snowMountainPos, "z", -50, 50)
+  .name("Z Position")
+  .listen();
+snowMountainFolder.open();
+
+const snowMountainRotationFolder = gui.addFolder("Snow Mountain Rotation");
+snowMountainRotationFolder
+  .add(snowMountainRot, "x", -Math.PI, Math.PI)
+  .name("X Rotation")
+  .listen();
+snowMountainRotationFolder
+  .add(snowMountainRot, "y", -Math.PI, Math.PI)
+  .name("Y Rotation")
+  .listen();
+snowMountainRotationFolder
+  .add(snowMountainRot, "z", -Math.PI, Math.PI)
+  .name("Z Rotation")
+  .listen();
+snowMountainRotationFolder.open();
 
 // Set keyboard controls
 function onKeyDown(event) {
@@ -185,10 +218,33 @@ function animate() {
   // Set clear color for the renderer
   renderer.setClearColor(0x9bbcc5, 1);
 
-  if (gltf && gltf.scene) {
-    gltf.scene.rotation.x += objRotation.x;
-    gltf.scene.rotation.y += objRotation.y;
-    gltf.scene.rotation.z += objRotation.z;
+  if (spaceship && spaceship.scene) {
+    spaceship.scene.position.set(
+      spaceshipPos.x,
+      spaceshipPos.y,
+      spaceshipPos.z
+    );
+    spaceship.scene.rotation.set(
+      spaceshipRot.x,
+      spaceshipRot.y,
+      spaceshipRot.z
+    );
+    spaceship.scene.rotation.x += objRotation.x;
+    spaceship.scene.rotation.y += objRotation.y;
+    spaceship.scene.rotation.z += objRotation.z;
+  }
+
+  if (snowMountain && snowMountain.scene) {
+    snowMountain.scene.position.set(
+      snowMountainPos.x,
+      snowMountainPos.y,
+      snowMountainPos.z
+    );
+    snowMountain.scene.rotation.set(
+      snowMountainRot.x,
+      snowMountainRot.y,
+      snowMountainRot.z
+    );
   }
 
   // Render the front view

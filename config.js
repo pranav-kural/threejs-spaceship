@@ -1,4 +1,5 @@
 export const AppConfig = {
   debugMode: true,
-  filePathObjectToLoad: "assets/objects/spaceship/scene.gltf",
+  spaceshipObjFile: "assets/objects/spaceship/scene.gltf",
+  snowMountainObjFile: "assets/objects/snow_mountain/scene.gltf",
 };
