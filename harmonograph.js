@@ -4,24 +4,25 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import * as THREE from "three";
 import * as dat from "dat.gui";
 import WebGL from "three/addons/capabilities/WebGL.js";
+import { ThreeMFLoader } from "three/examples/jsm/Addons.js";
 
 dlog.log("Index.js loaded");
 
 // Create a scene
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x9bbcc5);
+scene.background = new THREE.Color(0x292929);
 
 // configurations for the cameras
 const cameraConfig = {
   fov: 140,
   topFov: 110,
-  aspect: (window.innerWidth * 0.5) / window.innerHeight,
+  aspect: window.innerWidth / window.innerHeight,
   near: 0.1,
   far: 1000,
   frontCameraPosition: [0, 0, 5],
-  topCameraPosition: [0, 5, 0],
+  //topCameraPosition: [0, 5, 0],
   // rotate top camera to look down
-  topCameraRotation: [-Math.PI / 2, 0, 0],
+  //topCameraRotation: [-Math.PI / 2, 0, 0],
 };
 
 // front camera
@@ -34,7 +35,7 @@ const frontCamera = new THREE.PerspectiveCamera(
 frontCamera.position.set(...cameraConfig.frontCameraPosition);
 frontCamera.lookAt(scene.position);
 
-// top camera
+/* // top camera
 const topCamera = new THREE.PerspectiveCamera(
   cameraConfig.topFov,
   cameraConfig.aspect,
@@ -43,7 +44,7 @@ const topCamera = new THREE.PerspectiveCamera(
 );
 topCamera.position.set(...cameraConfig.topCameraPosition);
 topCamera.rotation.set(...cameraConfig.topCameraRotation);
-topCamera.lookAt(scene.position);
+topCamera.lookAt(scene.position); */
 
 // Setup renderer
 const renderer = new THREE.WebGLRenderer();
@@ -53,6 +54,96 @@ document.body.appendChild(renderer.domElement);
 // Load object
 let gltf;
 loadObject(scene);
+
+const geometry = new THREE.BufferGeometry();
+const textureLoader = new THREE.TextureLoader();
+
+var ground = textureLoader.load("../assets/objects/ground/textures/snow_02_diff_4k.jpg");
+ground.wrapS = ground.wrapT = THREE.RepeatWrapping;
+ground.repeat.set(100,100);
+ground.anisotropy = 1;
+
+var groundMaterial = new THREE.MeshStandardMaterial( { map: ground } );
+
+var mesh = new THREE.Mesh( new THREE.PlaneGeometry( 1000000, 1000000 ), groundMaterial );
+mesh.position.y = -25;
+mesh.rotation.x = 5;
+mesh.receiveShadow = true;
+scene.add( mesh );
+
+/* // Snowy Ground
+var ground = new THREE.Mesh(
+  new THREE.PlaneGeometry( 11000, 11000 ),
+  new THREE.MeshPhongMaterial( {color:'white'} )
+);
+ground.position.y = -30;
+ground.rotation.set( -Math.PI/2, 0, 0 );
+scene.add( ground ); */
+
+// Adding Snow
+let snowflakes;
+let positions = [], velocities = [];
+
+// Number of Snowflakes
+const N = 100000
+
+// Snowflake Spawn Limitations
+const maxX = 500, minX = maxX/2;
+const maxZ = 300, minZ = maxZ/2;
+const minY = 20;
+
+addSnowflakes();
+
+// Initial Snowflake Creation
+function addSnowflakes() {
+  for (let i = 0; i < N; i++) {
+    positions.push(
+      Math.floor(Math.random() * maxX - minX),
+      Math.floor(Math.random() * 200),
+      Math.floor(Math.random() * maxZ - minZ));
+
+    // Constant Velocity for each Snowflake
+    velocities.push(
+      Math.floor(Math.random() * 6 - 3) * 0.1, // x movement varies from positive to negative
+      Math.floor(Math.random() * 5 + 1) * -0.2, // y movement always negative due to gravity
+      Math.floor(Math.random() * 6 + 1) * 0.5); // z movement always positive and non-zero to simulate movement while following spaceship
+  }
+
+  // Every Set of 3 Positions/Velocities Attributed to each Snowflake [x,y,z]
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('velocity', new THREE.Float32BufferAttribute(velocities, 3));
+
+  // Mapping Texture for Snowflake
+  const flakeMaterial = new THREE.PointsMaterial({
+    size: 0.5,
+    map: textureLoader.load("../assets/objects/snowflake/snowflake.png"),
+    blending: THREE.AdditiveBlending,
+    depthTest: false,
+    transparent: true,
+    opacity: 0.4
+  })
+
+  snowflakes = new THREE.Points(geometry,flakeMaterial);
+  scene.add(snowflakes);
+}
+
+// Continuously Updating Snowflake Positions Based on Velocities
+function updateSnowflakes(){
+  for (let i = 0; i < N*3; i+= 3){
+    snowflakes.geometry.attributes.position.array[i] += snowflakes.geometry.attributes.velocity.array[i];
+    snowflakes.geometry.attributes.position.array[i+1] += snowflakes.geometry.attributes.velocity.array[i+1];
+    snowflakes.geometry.attributes.position.array[i+2] += snowflakes.geometry.attributes.velocity.array[i+2];
+
+    // Position Resets Once Ground is Reached
+    if(snowflakes.geometry.attributes.position.array[i+1] < -30) {
+      snowflakes.geometry.attributes.position.array[i] = Math.floor(Math.random() * maxX - minX);
+      snowflakes.geometry.attributes.position.array[i+1] = Math.floor(Math.random() * 200 + minY);
+      snowflakes.geometry.attributes.position.array[i+2] = Math.floor(Math.random() * maxZ - minZ);
+    }
+  }
+
+  snowflakes.geometry.attributes.position.needsUpdate = true;
+}
 
 // function to load object
 async function loadObject(scene) {
@@ -78,7 +169,7 @@ async function loadObject(scene) {
     gltf.scene.rotation.set(0.1, 0, 0);
 
     // add directional light on the object
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 10);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
     directionalLight.position.set(0, 1, 0);
     scene.add(directionalLight);
   };
@@ -266,6 +357,10 @@ function clearScene() {
 // Animation loop
 function animate() {
   requestAnimationFrame(animate);
+  updateSnowflakes();
+
+  // Move Ground to Simulate Camera Movement Following Spaceship
+  mesh.translateY(-3);
 
   // Animate the object's position
   if (gltf) {
@@ -282,20 +377,21 @@ function animate() {
     const x = Ax * Math.sin(wx * time + px) + As * Math.sin(ws * time + ps);
     const y = Ay * Math.sin(wy * time + py);
     const z = Az * Math.sin(wz * time + pz);
+
     gltf.scene.position.set(x, y, z);
   }
 
   // Set clear color for the renderer
-  renderer.setClearColor(0x9bbcc5, 1); // Set the background color
+  renderer.setClearColor('0x9bbcc5', 1); // Set the background color
 
   // Render the front view
-  renderer.setViewport(0, 0, window.innerWidth / 2, window.innerHeight);
-  renderer.setScissor(0, 0, window.innerWidth / 2, window.innerHeight);
+  renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+  renderer.setScissor(0, 0, window.innerWidth, window.innerHeight);
   renderer.setScissorTest(true);
   renderer.render(scene, frontCamera);
 
   // Render the top view
-  renderer.setViewport(
+/*   renderer.setViewport(
     window.innerWidth / 2,
     0,
     window.innerWidth / 2,
@@ -308,7 +404,7 @@ function animate() {
     window.innerHeight
   );
   renderer.setScissorTest(true);
-  renderer.render(scene, topCamera);
+  renderer.render(scene, topCamera); */
 }
 
 // Check if WebGL is available
