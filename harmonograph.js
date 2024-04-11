@@ -19,10 +19,7 @@ const cameraConfig = {
   aspect: window.innerWidth / window.innerHeight,
   near: 0.1,
   far: 1000,
-  frontCameraPosition: [0, 0, 5],
-  //topCameraPosition: [0, 5, 0],
-  // rotate top camera to look down
-  //topCameraRotation: [-Math.PI / 2, 0, 0],
+  frontCameraPosition: [0, 0, 5]
 };
 
 // front camera
@@ -35,17 +32,6 @@ const frontCamera = new THREE.PerspectiveCamera(
 frontCamera.position.set(...cameraConfig.frontCameraPosition);
 frontCamera.lookAt(scene.position);
 
-/* // top camera
-const topCamera = new THREE.PerspectiveCamera(
-  cameraConfig.topFov,
-  cameraConfig.aspect,
-  cameraConfig.near,
-  cameraConfig.far
-);
-topCamera.position.set(...cameraConfig.topCameraPosition);
-topCamera.rotation.set(...cameraConfig.topCameraRotation);
-topCamera.lookAt(scene.position); */
-
 // Setup renderer
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -55,10 +41,12 @@ document.body.appendChild(renderer.domElement);
 let gltf;
 loadObject(scene);
 
+
+// Snowy Ground
 const geometry = new THREE.BufferGeometry();
 const textureLoader = new THREE.TextureLoader();
 
-var ground = textureLoader.load("../assets/objects/ground/textures/snow_02_diff_4k.jpg");
+/* var ground = textureLoader.load("../assets/objects/ground/textures/snow_02_diff_4k.jpg");
 ground.wrapS = ground.wrapT = THREE.RepeatWrapping;
 ground.repeat.set(100,100);
 ground.anisotropy = 1;
@@ -69,16 +57,7 @@ var mesh = new THREE.Mesh( new THREE.PlaneGeometry( 1000000, 1000000 ), groundMa
 mesh.position.y = -25;
 mesh.rotation.x = 5;
 mesh.receiveShadow = true;
-scene.add( mesh );
-
-/* // Snowy Ground
-var ground = new THREE.Mesh(
-  new THREE.PlaneGeometry( 11000, 11000 ),
-  new THREE.MeshPhongMaterial( {color:'white'} )
-);
-ground.position.y = -30;
-ground.rotation.set( -Math.PI/2, 0, 0 );
-scene.add( ground ); */
+scene.add( mesh ); */
 
 // Adding Snow
 let snowflakes;
@@ -360,7 +339,7 @@ function animate() {
   updateSnowflakes();
 
   // Move Ground to Simulate Camera Movement Following Spaceship
-  mesh.translateY(-3);
+  // mesh.translateY(-3);
 
   // Animate the object's position
   if (gltf) {
@@ -389,22 +368,6 @@ function animate() {
   renderer.setScissor(0, 0, window.innerWidth, window.innerHeight);
   renderer.setScissorTest(true);
   renderer.render(scene, frontCamera);
-
-  // Render the top view
-/*   renderer.setViewport(
-    window.innerWidth / 2,
-    0,
-    window.innerWidth / 2,
-    window.innerHeight
-  );
-  renderer.setScissor(
-    window.innerWidth / 2,
-    0,
-    window.innerWidth / 2,
-    window.innerHeight
-  );
-  renderer.setScissorTest(true);
-  renderer.render(scene, topCamera); */
 }
 
 // Check if WebGL is available
